@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+    <http:listener-config name="api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="api-config" api="api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <file:config name="File_Config" doc:name="File Config" doc:id="db9a9962-3cd2-4320-8967-a4450292e22d" />
+    <http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="fd886f4a-313d-4673-aec7-9a03613d6d0f">
+        <http:request-connection host="127.0.0.1" port="8081" />
+    </http:request-config>
+    <jms:config name="JMS_Config" doc:name="JMS Config" doc:id="9256267c-09c3-4e05-bc7e-f1d35fb71469" >
+		<jms:active-mq-connection />
+	</jms:config>
+	<flow name="api-main">
+        <http:listener config-ref="api-httpListenerConfig" path="/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="api-console">
+        <http:listener config-ref="api-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\4:api-config" doc:id="71b2a3b7-8613-4fc4-8bc9-04b926711c0c">
+        <logger level="INFO" doc:name="Logger" doc:id="97c8a089-82ab-4e79-8e65-becf36acbc4f" />
+        <set-payload value="Before" doc:name="&quot;Before&quot;" doc:id="4710d2cd-079b-4ad5-826f-c812290f2bef" />
+        <validation:is-null doc:name="Is null" doc:id="979ca24e-b419-494d-ba01-d8c2f1953733" value="#[payload]" message="Validation Error" />
+        <set-payload value="After" doc:name="&quot;After&quot;" doc:id="1bbb48c8-3369-4ecd-b174-f78ccec9955a" />
+    </flow>
+    <flow name="get:\6:api-config">
+        <set-payload value="#[[1,2,3,4]]" doc:name="[1,2,3,4]" />
+        <foreach doc:name="For Each">
+            <set-payload value="[&quot;order&quot; ++ payload]" doc:name="&quot;order&quot; ++ payload" />
+        </foreach>
+        <logger level="INFO" doc:name="payload" message="#[payload]" />
+    </flow>
+    <flow name="createCustomerObject" doc:id="85a3a5a1-9f60-4917-986e-529616f15b1b">
+        <logger level="INFO" doc:name="Logger" doc:id="3071baf5-08c7-4ecd-8af7-140f0da41356" message="#[payload]" />
+    </flow>
+    <flow name="get:\7:api-config">
+        <logger level="INFO" message="get:\7:api-config" />
+        <set-payload value="#[lookup(&quot;createCustomerObject&quot;, { first: &quot;Alice&quot;, last: &quot;Green&quot;})]" doc:name="Set Payload" doc:id="fc382d1e-c6f6-489f-9cd9-ab7f0124c7c4" />
+    </flow>
+    <flow name="post:\9:api-config">
+        <logger level="INFO" message="get:\8:api-config" />
+        <ee:transform doc:name="Add write_data" doc:id="5741190c-b041-44ae-becf-0a227745dba7">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload ++ {"write_date": now()}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <file:write doc:name="Write" doc:id="975baaf7-be6b-4fa4-9d29-806f8c3bc466" path="records.csv" />
+        <logger level="INFO" doc:name="Logger" doc:id="d58fe171-e48b-4b4e-b9c3-1f64d1cf89cc" message="#[payload]" />
+    </flow>
+    <flow name="private" doc:id="70f35bc1-6293-4649-bae3-40c167d59bf7">
+        <validation:is-number numberType="INTEGER" doc:name="payload" doc:id="62b88136-b886-4d45-ab70-b15626520493" value="#[payload]" />
+        <error-handler>
+            <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="296af5c7-e7b6-434e-bd47-7112a7d4acf0">
+                <set-payload value="Error - private flow" doc:name="Error - private flow" doc:id="571463ed-8256-4aeb-b211-877d30e051a1" />
+            </on-error-continue>
+        </error-handler>
+    </flow>
+    <flow name="get:\11:api-config">
+        <set-payload value="foo" doc:name="Set Payload" doc:id="d1a36ee8-f104-493c-8bc0-2404dcdc0736" />
+        <flow-ref doc:name="private" doc:id="8c77b34a-35c3-46d4-91c1-1e83f7243267" name="private" />
+        <set-payload value="Success - main flow" doc:name="Success - main flow" doc:id="c430a4a7-b296-474c-99e5-b59970c10a23" />
+        <error-handler>
+            <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="6c47f108-edce-48df-afd6-6ac39290c122">
+                <set-payload value="Error - main flow" doc:name="Error - main flow" doc:id="a2a18ede-d895-43f0-b20a-73ba996ae15b" />
+            </on-error-continue>
+        </error-handler>
+    </flow>
+    <flow name="get:\13:api-config">
+        <logger level="INFO" message="get:\13:api-config" />
+        <set-payload value="#[[1,2,3]]" doc:name="[1,2,3]" doc:id="ba34009d-f87e-4c9e-8708-8cee921edb02" />
+        <batch:job jobName="processRecordsBatchJob" doc:id="3ba5acaf-a7ab-43c7-b491-5f77c3bfcf5d" target="payload">
+            <batch:process-records>
+                <batch:step name="Batch_Step1" doc:id="41394a25-be74-4e75-8f57-0a3376d7f5e9">
+                    <set-payload value="#[&quot;StepOne&quot; ++ payload]" doc:name="&quot;StepOne&quot; ++ payload" doc:id="7f7506ba-09d7-4da4-9fa5-46d9f6cb1e6f" />
+                </batch:step>
+                <batch:step name="Batch_Step2" doc:id="b1ee9568-0eae-455e-98a8-0ce13821e801">
+                    <set-payload value="#[&quot;StepTwo&quot; ++ payload]" doc:name="&quot;StepTwo&quot; ++ payload" doc:id="10539253-1dcc-4686-980f-6768d6ed6e5d" />
+                </batch:step>
+            </batch:process-records>
+            <batch:on-complete>
+                <logger level="INFO" doc:name="payload" doc:id="ef0d9f3a-e34e-4ea9-b561-4131bc74e3d9" message="#[payload]" />
+            </batch:on-complete>
+        </batch:job>
+    </flow>
+    <flow name="get:\14:api-config">
+        <http:request method="GET" doc:name="Request" doc:id="63b65231-2548-49da-a729-9ce29665f4eb" config-ref="HTTP_Request_configuration" path="/0">
+            <error-mapping sourceType="HTTP:NOT_FOUND" targetType="APP:API_RESOURCE_NOT_FOUND" />
+        </http:request>
+        <set-payload value="Success - main flow" doc:name="Success - main flow" doc:id="ad56a4d6-8ac9-467d-b7cd-1394d71b91e5" />
+        <error-handler>
+            <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="23974eb5-5448-4f86-b65b-3ca8f243fbb5" type="HTTP:NOT_FOUND">
+                <set-payload value="HTTP: NOT FOUND" doc:name="HTTP: NOT FOUND" doc:id="62bff3da-6873-40d5-9c27-0f2e81f1c996" />
+            </on-error-propagate>
+            <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="a2d6777a-3af0-4c32-98c4-69850ccd0bd3" type="APP:API_RESOURCE_NOT_FOUND">
+                <set-payload value="APP:API_RESOURCE_NOT_FOUND" doc:name="APP:API_RESOURCE_NOT_FOUND" doc:id="7a21a75d-4855-46ed-b25e-74811ddf6b96" />
+            </on-error-continue>
+            <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="22aef9f7-e97e-4e46-954f-cf758ebc89b0" when="#[true]">
+                <set-payload value="Other error" doc:name="Other error" doc:id="85157eee-e30b-4ca7-834d-3814851838f7" />
+            </on-error-continue>
+        </error-handler>
+    </flow>
+    <flow name="child" doc:id="7831ceff-acba-49b4-80f0-a27c541814c0">
+        <logger level="INFO" doc:name="payload" doc:id="1ac05511-811f-4a10-ae21-944d5de39f36" message="#[payload]" />
+        <logger level="INFO" doc:name="quantity" doc:id="cada96f3-bf09-45da-a2d4-769c8f5cebe8" message="#[vars.quantity]" />
+        <logger level="INFO" doc:name="queryParams" doc:id="32740a16-f5bd-495b-aed2-edabf83e322f" message="#[attributes.queryParams]" />
+    </flow>
+    <flow name="get:\20:api-config">
+        <logger level="INFO" message="get:\20:api-config" />
+        <set-payload value="Order01" doc:name="Order01" doc:id="f530d42c-4be3-49cf-884c-b94184b69ebc" />
+        <set-variable value="1" doc:name="quantity" doc:id="306ca313-fab4-4492-aed4-cc90b19a2957" variableName="quantity" />
+        <flow-ref doc:name="child" doc:id="d2056e2c-5d9e-47ff-9018-36b513c2c0f5" name="child" />
+    </flow>
+    <flow name="post:\child:api-config">
+        <logger level="INFO" doc:name="payload" doc:id="57d74240-3533-4726-a1ea-c13a3d95e358" message="#[payload]" />
+        <logger level="INFO" doc:name="quantity" doc:id="36991f0d-2ee0-434f-9a0e-f427a53d9c14" message="#[vars.quantity]" />
+        <logger level="INFO" doc:name="queryParams" doc:id="09e162dd-a49c-4d93-9e22-cf9a12497b83" message="#[attributes.queryParams]" />
+    </flow>
+    <flow name="get:\24:api-config">
+        <logger level="INFO" message="get:\24:api-config" />
+        <set-payload value="Order01" doc:name="Order01" doc:id="c1be7a31-adc8-44e4-afd9-025d72dc8c84" />
+        <set-variable value="1" doc:name="quantity" doc:id="dc4077a6-0c1b-4674-8e59-fd0a12e8407e" variableName="quantity" />
+        <http:request method="POST" doc:name="child" doc:id="04d13cce-cd7c-4de9-a36c-effdab3f05b2" config-ref="HTTP_Request_configuration" path="/child">
+            <http:query-params><![CDATA[#[output application/java
+---
+{
+	"color" : "red"
+}]]]></http:query-params>
+        </http:request>
+    </flow>
+    <flow name="get:\26:api-config">
+        <set-payload value="&lt;note&gt; &lt;to&gt;Tove&lt;/to&gt; &lt;from&gt;Jani&lt;/from&gt; &lt;heading&gt;Reminder&lt;/heading&gt; &lt;body&gt;Don't forget me this weekend!&lt;/body&gt; &lt;/note&gt; &lt;to&gt;Tove&lt;/to&gt; &lt;from&gt;Jani&lt;/from&gt; &lt;heading&gt;Reminder&lt;/heading&gt; &lt;body&gt;Don't forget me this weekend!&lt;/body&gt; &lt;/note&gt;&quot;" doc:name="Set to XML" doc:id="846439f3-9511-4d12-9923-b498b1dac0fc" />
+        <ee:transform doc:name="Transform Message" doc:id="f9ac0ab7-5d8d-42f7-b04e-85a559501065">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+typeOf(payload)]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <logger level="INFO" message="#[payload]" />
+    </flow>
+	<flow name="jms1" doc:id="b49311ee-8eba-4b29-ac00-fda2fbfc23ac">
+		<jms:listener doc:name="Listener" doc:id="0d62a303-21b3-4596-bced-a4eac9332bac" config-ref="JMS_Config" destination="JMS: num1"/>
+		<set-payload value="#[payload + 1]" doc:name="payload + 1" doc:id="1230a0df-c076-4321-9854-1840c2c032b5" />
+	</flow>
+	<flow name="get:\30:api-config">
+		<set-payload value="#[1]" doc:name="1" doc:id="179876b5-568c-4bdc-8a82-2ee1b2c6b14a" />
+		<jms:publish-consume doc:name="JMS: num1" doc:id="b6fb8634-0893-4e70-bb58-08a2d6c59fd6" config-ref="JMS_Config" destination="num1"/>
+		<logger level="INFO" message="#[payload]" doc:name="payload"/>
+    </flow>
+</mule>
