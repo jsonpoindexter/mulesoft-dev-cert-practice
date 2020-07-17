@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
-http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
     <http:listener-config name="api-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="8081" />
     </http:listener-config>
@@ -9,10 +8,10 @@ http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/
     <http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="fd886f4a-313d-4673-aec7-9a03613d6d0f">
         <http:request-connection host="127.0.0.1" port="8081" />
     </http:request-config>
-    <jms:config name="JMS_Config" doc:name="JMS Config" doc:id="9256267c-09c3-4e05-bc7e-f1d35fb71469" >
-		<jms:active-mq-connection />
-	</jms:config>
-	<flow name="api-main">
+    <jms:config name="JMS_Config" doc:name="JMS Config" doc:id="9256267c-09c3-4e05-bc7e-f1d35fb71469">
+        <jms:active-mq-connection />
+    </jms:config>
+    <flow name="api-main">
         <http:listener config-ref="api-httpListenerConfig" path="/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
                 <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
@@ -134,7 +133,7 @@ output application/json
     <flow name="get:\4:api-config" doc:id="71b2a3b7-8613-4fc4-8bc9-04b926711c0c">
         <logger level="INFO" doc:name="Logger" doc:id="97c8a089-82ab-4e79-8e65-becf36acbc4f" />
         <set-payload value="Before" doc:name="&quot;Before&quot;" doc:id="4710d2cd-079b-4ad5-826f-c812290f2bef" />
-        <validation:is-null doc:name="Is null" doc:id="979ca24e-b419-494d-ba01-d8c2f1953733" value="#[payload]" message="Validation Error" />
+        <validation:is-null doc:name="payload" doc:id="979ca24e-b419-494d-ba01-d8c2f1953733" value="#[payload]" message="Validation Error" />
         <set-payload value="After" doc:name="&quot;After&quot;" doc:id="1bbb48c8-3369-4ecd-b174-f78ccec9955a" />
     </flow>
     <flow name="get:\6:api-config">
@@ -198,6 +197,14 @@ payload ++ {"write_date": now()}]]></ee:set-payload>
                 <logger level="INFO" doc:name="payload" doc:id="ef0d9f3a-e34e-4ea9-b561-4131bc74e3d9" message="#[payload]" />
             </batch:on-complete>
         </batch:job>
+        <ee:transform doc:name="Transform Message" doc:id="1799ae74-bd79-437e-be04-1e2ff5692b2c">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
     </flow>
     <flow name="get:\14:api-config">
         <http:request method="GET" doc:name="Request" doc:id="63b65231-2548-49da-a729-9ce29665f4eb" config-ref="HTTP_Request_configuration" path="/0">
@@ -256,13 +263,96 @@ typeOf(payload)]]></ee:set-payload>
         </ee:transform>
         <logger level="INFO" message="#[payload]" />
     </flow>
-	<flow name="jms1" doc:id="b49311ee-8eba-4b29-ac00-fda2fbfc23ac">
-		<jms:listener doc:name="Listener" doc:id="0d62a303-21b3-4596-bced-a4eac9332bac" config-ref="JMS_Config" destination="JMS: num1"/>
-		<set-payload value="#[payload + 1]" doc:name="payload + 1" doc:id="1230a0df-c076-4321-9854-1840c2c032b5" />
-	</flow>
-	<flow name="get:\30:api-config">
-		<set-payload value="#[1]" doc:name="1" doc:id="179876b5-568c-4bdc-8a82-2ee1b2c6b14a" />
-		<jms:publish-consume doc:name="JMS: num1" doc:id="b6fb8634-0893-4e70-bb58-08a2d6c59fd6" config-ref="JMS_Config" destination="num1"/>
-		<logger level="INFO" message="#[payload]" doc:name="payload"/>
+    <flow name="get:\49:api-config">
+        <logger level="INFO" doc:name="Logger" doc:id="44fd342f-3bd8-4472-b4f4-5ecfee22f0ea" message="get:\24:api-config" />
+        <logger level="INFO" doc:name="queryParams" doc:id="3733dd8e-cd07-4617-b7d3-33fb9639600d" message="#[attributes.queryParams]" />
+        <set-payload value="Order01" doc:name="Order01" doc:id="9ccc3281-c0c1-410b-ba8d-11907c2c573e" />
+        <set-variable value="1" doc:name="quantity to 1" doc:id="a202d8ff-3928-4a92-b054-bb283963ac40" variableName="quantity" />
+        <http:request method="POST" doc:name="child" doc:id="c4ea1068-932d-48ff-9a3a-fdb64104621d" config-ref="HTTP_Request_configuration" path="/child">
+            <http:query-params><![CDATA[#[output application/java
+---
+{
+	"color" : "blue"
+}]]]></http:query-params>
+        </http:request>
+        <logger level="INFO" doc:name="payload" doc:id="f2975374-300a-4515-ae2e-e77eb3490222" message="#[payload]" />
+        <logger level="INFO" doc:name="quantity" doc:id="ec386aa3-f9bc-431a-a18e-f025024c9727" message="#[vars.quantity]" />
+        <logger level="INFO" doc:name="queryParams" doc:id="ec042103-0e4b-4616-a0a4-133aae8c25c7" message="#[attributes.queryParams]" />
+        <logger level="INFO" doc:name="attributes" doc:id="edf72e46-92b2-4166-8ad1-06af0fb31942" message="#[attributes]" />
+    </flow>
+    <flow name="get:\1:api-config">
+        <logger level="INFO" message="get:\1:api-config" />
+        <ee:transform doc:name="Transform Message" doc:id="3d2bf0cf-2cbe-45c9-ab64-cf2d89912f50">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+Mule::lookup("child", {})]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\30:api-config">
+        <logger level="INFO" message="get:\30:api-config" />
+    </flow>
+    <flow name="get:\76:api-config">
+        <logger level="INFO" message="get:\76:api-config" />
+        <set-payload value="#[[1,2,3,4]]" doc:name="Set Payload" doc:id="98fbfbd8-5af2-4be2-a276-23c50990a2c9" />
+        <set-variable value="10" doc:name="Set Variable" doc:id="5e313e54-0ecc-4e3b-88ef-e4dcdaae1626" variableName="quantity" />
+        <foreach doc:name="For Each" doc:id="63b9c087-3169-4e74-9ec3-87845591d87c" collection="#[payload]">
+            <logger level="INFO" doc:name="ForEach" doc:id="50c90731-d382-4359-bda8-6f6fb4ab9c2b" message="ForEach" />
+            <set-payload value="#[&quot;order&quot; ++ payload]" doc:name="Set Payload" doc:id="fa930442-3535-4011-a533-07f6c7b1c86c" />
+            <set-variable value="#[vars.quantity + 1]" doc:name="Set Variable" doc:id="8330256a-cdca-4b15-9fd9-0677304b0575" variableName="quantity" />
+        </foreach>
+        <logger level="INFO" doc:name="Logger" doc:id="32e839c0-d1af-4bdb-9801-80d539840c8f" message="#[[payload, vars.quantity]]" />
+    </flow>
+    <flow name="setPayload100" doc:id="3f7cb4af-943f-41aa-91d4-e4d553861717">
+        <set-payload value="100" doc:name="100" doc:id="41d2b0f4-f70e-4dc2-9458-49007d817e9f" />
+    </flow>
+    <flow name="setPayload200" doc:id="8f03587b-b958-4753-9a91-a91a239fe7dd">
+        <set-payload value="200" doc:name="200" doc:id="6bf4bfc5-58ed-4a56-b762-a76d35b4d644" />
+    </flow>
+    <flow name="get:\85:api-config">
+        <logger level="INFO" message="get:\85:api-config" />
+        <scatter-gather doc:name="Scatter-Gather" doc:id="e075e713-c2f4-4043-a00a-bdf11873f610">
+            <route>
+                <flow-ref doc:name="Flow Reference" doc:id="b4e8c4cd-669a-41b0-a393-3131c2c36817" name="setPayload100" />
+            </route>
+            <route>
+                <flow-ref doc:name="Flow Reference" doc:id="e184b3d8-f346-485a-901c-ed548f230b93" name="setPayload200" />
+            </route>
+        </scatter-gather>
+        <ee:transform doc:name="payload" doc:id="d8ce0455-70f4-4cad-b8cd-70f653cb8db0">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <logger level="INFO" doc:name="Logger" doc:id="7974d4fa-6abc-4365-85f2-6b488a6c9d86" message="#[payload]" />
+    </flow>
+    <flow name="get:\87:api-config">
+        <logger level="INFO" message="get:\87:api-config" />
+        <set-payload value="#[[&quot;Apple&quot;, &quot;Banana&quot;]]" doc:name="Set Payload" doc:id="62b33aaa-6201-41be-825c-142b03e9c92c" />
+        <batch:job jobName="mulesoft-dev-cert-practiceBatch_Job" doc:id="c4001ed2-9b7e-4bda-b587-3d43930bf04b">
+            <batch:process-records>
+                <batch:step name="Batch_Step" doc:id="cdc230d4-2281-4ee4-bded-f82aab189395">
+                    <set-payload value="#[payload ++ 1]" doc:name="payload ++ 1" doc:id="5f3d838e-579e-4aba-aae2-85217fc83973" />
+                </batch:step>
+                <batch:step name="Batch_Step3" doc:id="f861506a-9529-4145-b25e-95a0d911a716">
+                    <set-payload value="#[payload ++ 2]" doc:name="payload ++ 2" doc:id="469933bd-088b-43e5-a882-2f9c8553e916" />
+                </batch:step>
+            </batch:process-records>
+            <batch:on-complete>
+                <logger level="INFO" doc:name="payload" doc:id="79bd1bb7-de6e-422a-96f3-cd63da33b1b0" message="#[payload]" />
+            </batch:on-complete>
+        </batch:job>
+        <logger level="INFO" doc:name="Payload" doc:id="d5fc5062-c8bb-4c93-a6ad-47d86c6c35d7" message="#[payload]" />
+    </flow>
+    <flow name="get:\89:api-config">
+        <logger level="INFO" message="get:\89:api-config" />
+		<set-payload value='#["Start"]' doc:name="Start" doc:id="5461fdb3-050e-46d5-b788-fa4235220001" />
+		<validation:is-blank-string doc:name="payload" doc:id="3cc01295-8edb-4c3f-b9d8-0f221c2ed4e8" value="#[payload]"/>
+		<set-payload value='#["End"]' doc:name="End" doc:id="3bbcef4f-566b-4cb3-9443-f958f0206919" />
     </flow>
 </mule>
